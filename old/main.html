@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML	 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+	<head>
+		
+		<!-- Written by Nartallax -->
+		<meta charset="UTF-8">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta http-equiv="x-ua-compatible" content="ie=edge"/>
+		
+		<title>Something</title>
+		
+		<style>
+			* {
+				padding: 0px;
+				margin: 0px;
+				border: 0px;
+				
+				overflow: hidden;
+			}
+		
+			html, body {
+				position: relative;
+				width: 100%;
+				height: 100%;
+				display: inline-block;
+			}
+			
+			canvas {
+				width: 100%;
+				height: 100%;
+				
+				background: #ccc;
+			}
+			
+		</style>
+		
+		<script type="text/javascript" src="addict.js"></script>
+		<script type="text/javascript" src="config.js"></script>
+		
+		<script type="text/javascript" src="libs/client/gl/external/glMatrix-0.9.5.min.js"></script>
+		<script type="text/javascript" src="libs/client/gl/external/webgl-utils.js"></script>
+		
+		<script type="text/javascript" src="libs/util/util.js"></script>
+		<script type="text/javascript" src="libs/util/log.js"></script>
+		<script type="text/javascript" src="libs/util/event.js"></script>
+		
+		<script type="text/javascript" src="libs/client/gl/util.js"></script>
+		<script type="text/javascript" src="libs/client/gl/textureloader.js"></script>
+		<script type="text/javascript" src="libs/client/gl/shape.js"></script>
+		<script type="text/javascript" src="libs/client/gl/simpleshape.js"></script>
+		<script type="text/javascript" src="libs/client/gl/compositeshape.js"></script>
+		<script type="text/javascript" src="libs/client/gl/shaderpack.js"></script>
+		<script type="text/javascript" src="libs/client/gl/shaderprogram.js"></script>
+		
+		<script type="text/javascript" src="libs/client/gl/shaders/typical.js"></script>
+		<script type="text/javascript" src="libs/client/gl/shaders/picking.js"></script>
+		
+		<script type="text/javascript" src="libs/client/gl/board.js"></script>
+		
+		<script type="text/javascript" src="libs/client_base.js"></script>
+		<script type="text/javascript" src="libs/client/client.js"></script>
+		
+		<script type="text/javascript" src="libs/message_channel.js"></script>
+		<script type="text/javascript" src="libs/channel/heartbeat.js"></script>
+		<script type="text/javascript" src="libs/message_client.js"></script>
+		
+		<script>
+			"use strict"
+			
+			var log = aRequire('nart.util.log');
+			
+			var ggl;
+			
+			Client.connect("ws://" + window.location.host + ":" + config.server.port, c => {
+				c = MessageClient(c)
+				
+				c.unhandledMessageReceived.listen(e => log("Failed to handle message: ", e.data.processingError))
+				c.disconnected.listen(() => log("Disconnected."))
+				c.expectHeartbeat(config.heartbeatRate);
+				
+				log("Connected.")
+			})
+			
+			var main = () => {
+			
+				var board = Board(createDisplayAt(document.body));
+				var gl = ggl = board.gl;
+				
+				Shape.defaultGl = gl;
+				
+				SimpleShape.defaultTextureLoader = new TextureLoader(gl).preloadAll(["crate.gif"], () => {
+				
+					var cube = (() => SimpleShape({
+					vertex: (() => { return[
+						// Front face
+						  -1.0, -1.0,  1.0,
+						   1.0, -1.0,  1.0,
+						   1.0,  1.0,  1.0,
+						  -1.0,  1.0,  1.0,
+
+						  // Back face
+						  -1.0, -1.0, -1.0,
+						  -1.0,  1.0, -1.0,
+						   1.0,  1.0, -1.0,
+						   1.0, -1.0, -1.0,
+
+						  // Top face
+						  -1.0,  1.0, -1.0,
+						  -1.0,  1.0,  1.0,
+						   1.0,  1.0,  1.0,
+						   1.0,  1.0, -1.0,
+
+						  // Bottom face
+						  -1.0, -1.0, -1.0,
+						   1.0, -1.0, -1.0,
+						   1.0, -1.0,  1.0,
+						  -1.0, -1.0,  1.0,
+
+						  // Right face
+						   1.0, -1.0, -1.0,
+						   1.0,  1.0, -1.0,
+						   1.0,  1.0,  1.0,
+						   1.0, -1.0,  1.0,
+
+						  // Left face
+						  -1.0, -1.0, -1.0,
+						  -1.0, -1.0,  1.0,
+						  -1.0,  1.0,  1.0,
+						  -1.0,  1.0, -1.0,
+					]})(), 
+					textureIndex: (() => { return [
+						  // Front face
+						  0.0, 0.0,
+						  1.0, 0.0,
+						  1.0, 1.0,
+						  0.0, 1.0,
+
+						  // Back face
+						  1.0, 0.0,
+						  1.0, 1.0,
+						  0.0, 1.0,
+						  0.0, 0.0,
+
+						  // Top face
+						  0.0, 1.0,
+						  0.0, 0.0,
+						  1.0, 0.0,
+						  1.0, 1.0,
+
+						  // Bottom face
+						  1.0, 1.0,
+						  0.0, 1.0,
+						  0.0, 0.0,
+						  1.0, 0.0,
+
+						  // Right face
+						  1.0, 0.0,
+						  1.0, 1.0,
+						  0.0, 1.0,
+						  0.0, 0.0,
+
+						  // Left face
+						  0.0, 0.0,
+						  1.0, 0.0,
+						  1.0, 1.0,
+						  0.0, 1.0,
+						]})(),
+					vertexIndex: (() => { return [
+						0, 1, 2,      0, 2, 3,    // Front face
+						4, 5, 6,      4, 6, 7,    // Back face
+						8, 9, 10,     8, 10, 11,  // Top face
+						12, 13, 14,   12, 14, 15, // Bottom face
+						16, 17, 18,   16, 18, 19, // Right face
+						20, 21, 22,   20, 22, 23  // Left face
+					]})(), 
+					vertexNormals: (() => { return [
+						  // Front face
+						   0.0,  0.0,  1.0,
+						   0.0,  0.0,  1.0,
+						   0.0,  0.0,  1.0,
+						   0.0,  0.0,  1.0,
+
+						  // Back face
+						   0.0,  0.0, -1.0,
+						   0.0,  0.0, -1.0,
+						   0.0,  0.0, -1.0,
+						   0.0,  0.0, -1.0,
+
+						  // Top face
+						   0.0,  1.0,  0.0,
+						   0.0,  1.0,  0.0,
+						   0.0,  1.0,  0.0,
+						   0.0,  1.0,  0.0,
+
+						  // Bottom face
+						   0.0, -1.0,  0.0,
+						   0.0, -1.0,  0.0,
+						   0.0, -1.0,  0.0,
+						   0.0, -1.0,  0.0,
+
+						  // Right face
+						   1.0,  0.0,  0.0,
+						   1.0,  0.0,  0.0,
+						   1.0,  0.0,  0.0,
+						   1.0,  0.0,  0.0,
+
+						  // Left face
+						  -1.0,  0.0,  0.0,
+						  -1.0,  0.0,  0.0,
+						  -1.0,  0.0,  0.0,
+						  -1.0,  0.0,  0.0,
+						]})(),
+					//highlightColor: [0.15, 0.15, 0.15],
+					z: -15.0, rotX: 0.5, textureName: "crate.gif"}))();
+					
+					var c2 = cube.clone();
+					c2.x = 5;
+					//c2.z += 1;
+					
+					var clones = [];
+					for(var i = 0; i < 11; i++){
+						var c = cube.clone();
+						c.z = -30.0;
+						c.x = (i - 5) * 4;
+						c.rotY = i * 0.05;
+						board.addChild(c);
+						clones.push(c)
+					}
+					
+					setInterval(() => {
+						clones.forEach(c => c.rotY += 0.025)
+						//cube.rotY += 0.025;
+						//c2.rotY -= 0.025;
+						//c2.z -= 0.01;
+					}, 10);
+					
+					if(false) setTimeout(() => {
+						console.log('stopping');
+						board.stop();
+					}, 1000);
+					
+					var mouseX = 0, mouseY = 0;
+					
+					var highlighted = undefined;
+					var highlightColor = [0.15, 0.15, 0.15], defaultHighlight = [0, 0, 0];
+					
+					var lighten = id => board.children[id].setHighlightColor(highlightColor);
+					var darken = id => board.children[id].setHighlightColor(defaultHighlight);
+					
+					var fps = 0;
+					//setInterval(() => { console.log(fps), (fps = 0) }, 1000)
+					
+					board.afterTick.listen(d => {
+						fps++;
+						
+						var id = board.childAt(mouseX, mouseY);
+						if(id === highlighted) return;
+						
+						highlighted === undefined || darken(highlighted)
+						id === undefined || lighten(id)
+						
+						highlighted = id
+						
+					});
+					
+					document.body.onmousemove = e => {
+						mouseX = e.clientX;
+						mouseY = e.clientY;
+					}
+					
+					
+					board
+						//.addChild(cube)
+						//.addChild(c2)
+						//.addChild(c1)
+						.setAmbientColor([0.7, 0.7, 0.7])
+						//.setLightDirection([1, 1.0, 1])
+						//.setLightColor([0.8, 0.8, 0.8])
+						.start();
+				});
+			}
+		
+		</script>
+	
+	</head>
+	<body onload="setTimeout(main, 1)"></body>
+</html>

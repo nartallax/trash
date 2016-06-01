@@ -1,0 +1,76 @@
+<html>
+	<head>
+		
+		<title>Something</title>
+		
+		<script type="text/javascript" src="libs/util/caps.js"></script>
+		
+		<style>
+			* {
+				text-align: center;
+				width: 100%;
+				
+				margin: 0px;
+				padding: 0px;
+				border: 0px;
+				
+				overflow: hidden;
+				
+				position: relative;
+				font-family: Arial;
+			}
+		
+			h1 {
+				color: #CCC;
+			}
+			
+			h2 {
+				color: #AAA;
+			}
+			
+			h3 {
+				color: #777;
+			}
+			
+			iframe {
+				height: 100%;
+			}
+			
+		</style>
+		
+		<script>
+			"use strict"
+			
+			var main = function(){
+				
+				var notice = document.getElementById("insufficient_caps_notice")
+				var label = document.getElementById("insufficient_caps_list")
+				
+				var caps = Caps.getAbsent().join(', ');
+				
+				if(caps){
+					label.textContent = caps
+					notice.style.display = "block";
+				} else {
+					notice.parentNode.removeChild(notice);
+					var frame = document.createElement('iframe');
+					frame.setAttribute('src', 'main.html');
+					frame.setAttribute('scrolling', 'no'); // strange bug
+					document.body.appendChild(frame);
+				}
+				
+			};
+		
+		</script>
+	
+	</head>
+	<body onload="setTimeout(main, 1)" style="background: #000">
+		<div id="insufficient_caps_notice" style="width: 100%; height: 100%; display: none">
+			<h1 style="position: absolute; bottom: 60%">You are NOT prepared!</h1>
+			<div style="position:absolute; top: 47%">
+				<h2 style="position: absolute; bottom: 55%;">Your browser is too old or stupid. Go get newer browser and get back.</h2>
+				<h3 style="position: absolute; top: 55%;">To be precise, your browser cannot into <span id="insufficient_caps_list">some modern tech</span>.</h3>
+			</div>
+		</div>
+	</body>
+</html>
